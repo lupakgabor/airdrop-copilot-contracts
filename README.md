@@ -1,12 +1,36 @@
 # Airdrop Copilot Contracts
 
+Welcome to the Airdrop Copilot Smart Contracts repository. This project contains the necessary smart contracts for the Airdrop Copilot project, designed to automate and make payments easier. Developed with Hardhat, this project provides a robust development environment for compiling, deploying, and testing Ethereum-based smart contracts.
 
-Try running some of the following tasks:
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+## Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- Node.js >= 12.0
+- npm or yarn installed
+- An Ethereum wallet with ETH for deploying contracts
+
+## Installation
+
+```bash
+  yarn install
 ```
+
+
+## Usage
+To run the test suite:
+```bash
+  yarn test
+```
+
+To compile the smart contracts, run:
+```bash
+  yarn compile
+```
+
+To deploy the smart contracts to a sepolia, run:
+```bash
+  yarn deploy-sepolia
+```
+

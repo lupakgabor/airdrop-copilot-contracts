@@ -6,6 +6,7 @@
   "scripts": {
     "test": "npx hardhat test",
     "test-gas": "REPORT_GAS=true npx hardhat test",
+    "compile": "npx hardhat compile",
     "deploy-sepolia": "npx hardhat run scripts/deploy.ts --network sepolia"
   },
   "devDependencies": {
