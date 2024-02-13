@@ -1,5 +1,5 @@
 import {ethers} from "hardhat";
-import {loadFixture, time} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import {loadFixture} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {expect} from "chai";
 
 
@@ -14,11 +14,12 @@ async function deployWithSampleSubscription() {
 }
 
 describe("constructor", () => {
-    it("should set the owner and manager correct", async () => {
+    it("should set the owner and manager correct and prices", async () => {
         const {subscription, owner, manager} = await loadFixture(deployWithSampleSubscription);
 
         expect(await subscription.owner()).to.equal(owner);
         expect(await subscription.manager()).to.equal(manager);
+        expect(await subscription.basePriceWei()).to.equal(ethers.parseEther("0.05"));
     });
 });
 
@@ -64,18 +65,100 @@ describe('subscribe', () => {
         const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
 
         await subscription.connect(signers[0]).subscribe({
-            value: ethers.parseEther("0.01"),
+            value: ethers.parseEther("0.05"),
         })
         const subscriber = await subscription.subscriptions(signers[0]);
-        const timestamp = await time.latest();
 
-        const date = new Date(timestamp * 1000)
-
-        date.setDate(date.getDate() + 30);
-
-        expect(subscriber).to.equal(date.getTime() / 1000);
+        await expect(subscriber).to.have.extraDays(30);
         expect(await ethers.provider.getBalance(subscription.target)).to.equal(
-            ethers.parseEther("0.01")
+            ethers.parseEther("0.05")
+        );
+    });
+
+    it('should allow to pay lower price if the user has a 20% discount', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+        await subscription.connect(manager).addDiscount(signers[0], 20);
+
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05") * BigInt(100 - 20) / BigInt(100),
+        });
+
+        const subscriber = await subscription.subscriptions(signers[0]);
+
+        await expect(subscriber).to.have.extraDays(30);
+        expect(await ethers.provider.getBalance(subscription.target)).to.equal(
+            ethers.parseEther("0.04")
+        );
+    });
+
+    it('should throw an error if discount GREATER than 100%', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+        await subscription.connect(manager).addDiscount(signers[0], 150);
+
+        await expect(
+            subscription.connect(signers[0]).subscribe({
+                value: ethers.parseEther("0.05"),
+            }),
+        ).to.be.revertedWithPanic(0x11); // Arithmetic operation overflowed outside of an unchecked block
+    });
+
+    it('should allow to subscribe free if discount 100%', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+        await subscription.connect(manager).addDiscount(signers[0], 100);
+
+        await subscription.connect(signers[0]).subscribe({
+            value: 0,
+        });
+
+        const subscriber = await subscription.subscriptions(signers[0]);
+
+        await expect(subscriber).to.have.extraDays(30);
+        expect(await ethers.provider.getBalance(subscription.target)).to.equal(
+            ethers.parseEther("0")
+        );
+    });
+})
+
+describe("setBasePriceWei", () => {
+    it('should change the new base price', async () => {
+        const {subscription, owner, manager, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await subscription.connect(manager).setBasePriceWei(ethers.parseEther("0.1"));
+
+        expect(await subscription.basePriceWei()).to.equal(ethers.parseEther("0.1"));
+    });
+    it('should reject the new base price if not the manager send the transaction', async () => {
+        const {subscription, owner, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await expect(
+            subscription.connect(owner).setBasePriceWei(ethers.parseEther("0.1"))
+        ).to.be.revertedWith(
+            "Only the manager can perform this action."
+        );
+
+        await expect(
+            subscription.connect(signers[0]).setBasePriceWei(ethers.parseEther("0.1"))
+        ).to.be.revertedWith(
+            "Only the manager can perform this action."
+        );
+    });
+});
+
+describe("addDiscount", () => {
+    it('should add discount to the given user', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await subscription.connect(manager).addDiscount(signers[0], 20);
+
+        expect(await subscription.discounts(signers[0])).to.eq(20);
+    });
+    it('should reject the addition if NOT the manager send the transaction', async () => {
+        const {subscription, owner, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await expect(
+            subscription.addDiscount(signers[0], 20)
+        ).to.be.revertedWith(
+            "Only the manager can perform this action."
         );
     });
 });
