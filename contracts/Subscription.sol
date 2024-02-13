@@ -20,7 +20,13 @@ contract Subscription {
         basePriceWei = 0.05 ether;
     }
 
+    function isSubscriptionActive(address userAddress) public view returns(bool) {
+        return uint32(block.timestamp) < subscriptions[userAddress];
+    }
+
     function subscribe() public payable {
+        // TODO: what if the amount is greater than it should be
+
         uint64 userBasePrice = basePriceWei;
         if (discounts[msg.sender] > 0) {
             userBasePrice = basePriceWei * (100-discounts[msg.sender]) / 100;
@@ -28,7 +34,13 @@ contract Subscription {
 
         require(msg.value >= userBasePrice, 'The sent amount is too low.');
 
-        subscriptions[msg.sender] = uint32(block.timestamp) + 30 * 24 * 60 * 60; // 30 days
+        uint32 initialTime = uint32(block.timestamp);
+
+        if (isSubscriptionActive(msg.sender)) {
+            initialTime = subscriptions[msg.sender];
+        }
+
+        subscriptions[msg.sender] = initialTime + 30 * 24 * 60 * 60; // 30 days
     }
 
     function changeManager(address newManager) public payable ownerOnly {

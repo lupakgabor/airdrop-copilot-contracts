@@ -1,5 +1,5 @@
 import {ethers} from "hardhat";
-import {loadFixture} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import {loadFixture, time} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {expect} from "chai";
 
 
@@ -47,6 +47,43 @@ describe("changeManager", () => {
         );
     });
 });
+
+describe('isSubscriptionActive', () => {
+    it('should subscription active after subscribe', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+
+        expect(await subscription.isSubscriptionActive(signers[0])).is.true;
+    });
+
+    it('verifies subscription remains active 20 days post-subscription', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+
+        await time.increase( 20 * 24 * 60 * 60); // + 30 days
+
+        expect(await subscription.isSubscriptionActive(signers[0])).is.true;
+    });
+
+    it('should subscription deactivated after a month', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+
+        await time.increase( 30 * 24 * 60 * 60); // + 30 days
+
+        expect(await subscription.isSubscriptionActive(signers[0])).is.false;
+    })
+});
+
 
 describe('subscribe', () => {
     it('should reject if the amount lower than expected', async () => {
@@ -117,6 +154,42 @@ describe('subscribe', () => {
             ethers.parseEther("0")
         );
     });
+
+    it('should be able to subscribe multiple time', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+
+        const subscriber = await subscription.subscriptions(signers[0]);
+
+        await expect(subscriber).to.have.extraDays(60);
+        expect(await ethers.provider.getBalance(subscription.target)).to.equal(
+            ethers.parseEther("0.1")
+        );
+    });
+
+    it('should set correct date even if it was previously subscribed but now it is not active', async () => {
+        const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+        await time.increase(  12 * 30 * 24 * 60 * 60); // + ~12 months
+
+        await subscription.connect(signers[0]).subscribe({
+            value: ethers.parseEther("0.05"),
+        });
+
+        const subscriber = await subscription.subscriptions(signers[0]);
+        await expect(subscriber).to.have.extraDays(30);
+        expect(await ethers.provider.getBalance(subscription.target)).to.equal(
+            ethers.parseEther("0.1")
+        );
+    })
 })
 
 describe("setBasePriceWei", () => {

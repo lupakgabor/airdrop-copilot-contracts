@@ -11,11 +11,10 @@ chai.use(function (chai, utils) {
         new Assertion(expectedExtraDays).to.be.a('number');
 
         const timestamp = await time.latest();
+        const expectedUnixTime = timestamp + expectedExtraDays * 24 * 60 * 60
 
-        const date = new Date(timestamp * 1000)
-
-        date.setDate(date.getDate() + expectedExtraDays);
-
-        new Assertion(subscriber).to.equal(BigInt(date.getTime() / 1000));
+        // +/- 2 sec is acceptable because of transaction time
+        new Assertion(subscriber).to.lessThanOrEqual(expectedUnixTime+2);
+        new Assertion(subscriber).to.greaterThanOrEqual(expectedUnixTime-2);
     });
 });
