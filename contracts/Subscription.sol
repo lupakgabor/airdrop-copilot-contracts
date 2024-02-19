@@ -5,50 +5,74 @@ import "hardhat/console.sol";
 
 
 contract Subscription {
-    
     address public owner;
     address public manager;
 
-    mapping(address => uint32) public subscriptions; // Max value: 2106-02-07
-    mapping(address => uint8) public discounts; // Value: 0-100
+    enum TIER_TYPE { BASIC, PRO, LIFETIME_BASIC, LIFETIME_PRO} // Values: 0,1,2,3
 
-    uint64 public basePriceWei; // Max value: 18.44 Eth
+    struct TIER {
+        uint64 priceWei;  // Max value: 18.44 Eth
+        uint32 additionalDuration; // In seconds
+    }
+
+    struct UserSubscription {
+        TIER_TYPE tierType;
+        uint32 validity;
+    }
+
+    mapping(TIER_TYPE => TIER) public tiers;
+    mapping(address => UserSubscription) public subscriptions; // Max value: 2106-02-07
+    mapping(address => uint8) public discounts; // Value: 0-100
 
     constructor(address _owner, address _manager) {
         owner = _owner;
         manager = _manager;
-        basePriceWei = 0.05 ether;
+
+        tiers[TIER_TYPE.BASIC] = TIER({ priceWei: 0.05 ether, additionalDuration : 30 * 24 * 60 * 60 }); // 30 days
+        tiers[TIER_TYPE.PRO] = TIER({ priceWei: 0.25 ether, additionalDuration : 30 * 24 * 60 * 60 }); // 30 days
+        tiers[TIER_TYPE.LIFETIME_BASIC] = TIER({ priceWei: 1.25 ether, additionalDuration : 10 * 12 * 30 * 24 * 60 * 60 }); // 10 years
+        tiers[TIER_TYPE.LIFETIME_PRO] = TIER({ priceWei: 2.05 ether, additionalDuration : 10 * 12 * 30 * 24 * 60 * 60 }); // 10 years
     }
 
+    // TODO: setSubscription for correction
     function isSubscriptionActive(address userAddress) public view returns(bool) {
-        return uint32(block.timestamp) < subscriptions[userAddress];
+        return uint32(block.timestamp) < subscriptions[userAddress].validity;
     }
 
-    function subscribe() public payable {
-        // TODO: what if the amount is greater than it should be
+    function calculateDiscount(uint64 userPrice, uint8 discount) pure public returns(uint64) {
+        return userPrice / 100 * (100-discount);
+    }
 
-        uint64 userBasePrice = basePriceWei;
+    function subscribe(TIER_TYPE _tierType) public payable {
+        TIER memory tier = tiers[_tierType];
+        uint64 userPrice = tier.priceWei;
         if (discounts[msg.sender] > 0) {
-            userBasePrice = basePriceWei * (100-discounts[msg.sender]) / 100;
+            userPrice = calculateDiscount(userPrice, discounts[msg.sender]);
         }
 
-        require(msg.value >= userBasePrice, 'The sent amount is too low.');
+        require(msg.value == userPrice, 'The sent amount is not correct.');
 
         uint32 initialTime = uint32(block.timestamp);
 
         if (isSubscriptionActive(msg.sender)) {
-            initialTime = subscriptions[msg.sender];
+            initialTime = subscriptions[msg.sender].validity;
         }
 
-        subscriptions[msg.sender] = initialTime + 30 * 24 * 60 * 60; // 30 days
+        subscriptions[msg.sender] = UserSubscription({
+            tierType: _tierType,
+            validity: initialTime + tier.additionalDuration
+        });
     }
 
     function changeManager(address newManager) public payable ownerOnly {
         manager = newManager;
     }
 
-    function setBasePriceWei(uint64 newBasePriceWei) public payable managerOnly {
-        basePriceWei = newBasePriceWei;
+    function setTierPriceWei(TIER_TYPE tierType, uint64 newBasePriceWei) public payable managerOnly {
+        tiers[tierType].priceWei = newBasePriceWei;
+    }
+    function setTierAdditionalDuration(TIER_TYPE tierType, uint32 additionalDuration) public payable managerOnly {
+        tiers[tierType].additionalDuration = additionalDuration;
     }
 
     function addDiscount(address userAddress, uint8 discountPercentage) public payable managerOnly {
