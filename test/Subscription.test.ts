@@ -36,7 +36,7 @@ describe('Subscription.test', () => {
                 [ethers.parseEther("1.25"), BigInt(10 * 12 * 30 * 24 * 60 * 60)]
             );
             expect(await subscription.tiers(TIER_TYPE.LIFETIME_PRO)).to.eql(
-                [ethers.parseEther("2.05"), BigInt(10 * 12 * 30 * 24 * 60 * 60)]
+                [ethers.parseEther("4"), BigInt(10 * 12 * 30 * 24 * 60 * 60)]
             );
         });
     });
@@ -198,6 +198,72 @@ describe('Subscription.test', () => {
 
             await expect(
                 subscription.addDiscount(signers[0], 20)
+            ).to.be.revertedWith(
+                "Only the manager can perform this action."
+            );
+        });
+    });
+
+    describe("gatherDeposit", () => {
+        it('should transfer all funds to the owner', async () => {
+            const {subscription, manager, owner} = await loadFixture(deployWithSampleSubscription);
+
+            await subscription.subscribe(TIER_TYPE.PRO, {
+                value: ethers.parseEther('0.25'),
+            })
+            const originalBalance = await ethers.provider.getBalance(owner);
+
+            await subscription.connect(manager).gatherDeposit(ethers.parseEther('0.25'))
+
+            expect(await ethers.provider.getBalance(owner) - originalBalance).to.equal(
+                ethers.parseEther('0.25')
+            );
+        });
+
+        it('should reject the gathering if NOT the manager send the transaction', async () => {
+            const {subscription, signers} = await loadFixture(deployWithSampleSubscription);
+            await subscription.subscribe(TIER_TYPE.PRO, {
+                value: ethers.parseEther('0.25'),
+            });
+
+            await expect(
+                subscription.connect(signers[0]).gatherDeposit(ethers.parseEther('0.25'))
+            ).to.be.revertedWith(
+                "Only the manager can perform this action."
+            );
+        });
+
+        it('should reject the gathering if the amount is greater than the available balance', async () => {
+            const {subscription, manager} = await loadFixture(deployWithSampleSubscription);
+
+            await expect(
+                subscription.connect(manager).gatherDeposit(ethers.parseEther('0.25'))
+            ).to.be.revertedWith(
+                "The given amount is greater than the balance."
+            );
+        });
+    });
+
+    describe("setSubscription", () => {
+        it('should set subscription to the given user', async () => {
+            const {subscription, manager, signers} = await loadFixture(deployWithSampleSubscription);
+            const validity = await time.latest() + 24 * 60 * 60 // 1 day
+
+            await subscription.connect(manager).setSubscription(signers[0], TIER_TYPE.PRO, validity);
+
+
+            const subscriber = await subscription.subscriptions(signers[0]);
+
+            expect(subscriber[0]).to.eq(TIER_TYPE.PRO);
+            await expect(subscriber[1]).to.have.extraDays(1);
+        });
+
+        it('should reject the addition if NOT the manager send the transaction', async () => {
+            const {subscription, signers} = await loadFixture(deployWithSampleSubscription);
+            const validity = await time.latest() + 24 * 60 * 60 // 1 day
+
+            await expect(
+                subscription.setSubscription(signers[0], TIER_TYPE.PRO, validity)
             ).to.be.revertedWith(
                 "Only the manager can perform this action."
             );

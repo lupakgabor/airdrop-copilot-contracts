@@ -24,7 +24,7 @@ describe('Subscription.subscribe.test', () => {
         {tier: TIER_TYPE.BASIC, tierName: 'Basic', price: "0.05", extraDays: 30},
         {tier: TIER_TYPE.PRO, tierName: 'Pro', price: "0.25", extraDays: 30},
         {tier: TIER_TYPE.LIFETIME_BASIC, tierName: 'Lifetime basic', price: "1.25", extraDays: 30 * 12 * 10},
-        {tier: TIER_TYPE.LIFETIME_PRO, tierName: 'Lifetime pro', price: "2.05", extraDays: 30 * 12 * 10},
+        {tier: TIER_TYPE.LIFETIME_PRO, tierName: 'Lifetime pro', price: "4", extraDays: 30 * 12 * 10},
     ] as const;
 
     testCases.forEach(({tier, tierName, price, extraDays}) => {

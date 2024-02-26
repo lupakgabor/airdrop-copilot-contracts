@@ -8,7 +8,7 @@ contract Subscription {
     address public owner;
     address public manager;
 
-    enum TIER_TYPE { BASIC, PRO, LIFETIME_BASIC, LIFETIME_PRO} // Values: 0,1,2,3
+    enum TIER_TYPE {BASIC, PRO, LIFETIME_BASIC, LIFETIME_PRO} // Values: 0,1,2,3
 
     struct TIER {
         uint64 priceWei;  // Max value: 18.44 Eth
@@ -28,19 +28,18 @@ contract Subscription {
         owner = _owner;
         manager = _manager;
 
-        tiers[TIER_TYPE.BASIC] = TIER({ priceWei: 0.05 ether, additionalDuration : 30 * 24 * 60 * 60 }); // 30 days
-        tiers[TIER_TYPE.PRO] = TIER({ priceWei: 0.25 ether, additionalDuration : 30 * 24 * 60 * 60 }); // 30 days
-        tiers[TIER_TYPE.LIFETIME_BASIC] = TIER({ priceWei: 1.25 ether, additionalDuration : 10 * 12 * 30 * 24 * 60 * 60 }); // 10 years
-        tiers[TIER_TYPE.LIFETIME_PRO] = TIER({ priceWei: 2.05 ether, additionalDuration : 10 * 12 * 30 * 24 * 60 * 60 }); // 10 years
+        tiers[TIER_TYPE.BASIC] = TIER({priceWei: 0.05 ether, additionalDuration: 30 * 24 * 60 * 60}); // 30 days
+        tiers[TIER_TYPE.PRO] = TIER({priceWei: 0.25 ether, additionalDuration: 30 * 24 * 60 * 60}); // 30 days
+        tiers[TIER_TYPE.LIFETIME_BASIC] = TIER({priceWei: 1.25 ether, additionalDuration: 10 * 12 * 30 * 24 * 60 * 60}); // 10 years
+        tiers[TIER_TYPE.LIFETIME_PRO] = TIER({priceWei: 4 ether, additionalDuration: 10 * 12 * 30 * 24 * 60 * 60}); // 10 years
     }
 
-    // TODO: setSubscription for correction
-    function isSubscriptionActive(address userAddress) public view returns(bool) {
+    function isSubscriptionActive(address userAddress) public view returns (bool) {
         return uint32(block.timestamp) < subscriptions[userAddress].validity;
     }
 
-    function calculateDiscount(uint64 userPrice, uint8 discount) pure public returns(uint64) {
-        return userPrice / 100 * (100-discount);
+    function calculateDiscount(uint64 userPrice, uint8 discount) pure public returns (uint64) {
+        return userPrice / 100 * (100 - discount);
     }
 
     function subscribe(TIER_TYPE _tierType) public payable {
@@ -71,6 +70,7 @@ contract Subscription {
     function setTierPriceWei(TIER_TYPE tierType, uint64 newBasePriceWei) public payable managerOnly {
         tiers[tierType].priceWei = newBasePriceWei;
     }
+
     function setTierAdditionalDuration(TIER_TYPE tierType, uint32 additionalDuration) public payable managerOnly {
         tiers[tierType].additionalDuration = additionalDuration;
     }
@@ -79,12 +79,24 @@ contract Subscription {
         discounts[userAddress] = discountPercentage;
     }
 
+    function gatherDeposit(uint256 amount) public managerOnly {
+        require(amount <= address(this).balance, 'The given amount is greater than the balance.');
+        payable(owner).transfer(amount);
+    }
+
+    function setSubscription(address _address, TIER_TYPE _tierType, uint32 _validity) public payable managerOnly {
+        subscriptions[_address] = UserSubscription({
+            tierType: _tierType,
+            validity: _validity
+        });
+    }
+
     modifier ownerOnly() {
         require(msg.sender == owner, "Only the owner can perform this action.");
         _;
     }
 
-   modifier managerOnly() {
+    modifier managerOnly() {
         require(msg.sender == manager, "Only the manager can perform this action.");
         _;
     }
