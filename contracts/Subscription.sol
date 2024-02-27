@@ -63,19 +63,19 @@ contract Subscription {
         });
     }
 
-    function changeManager(address newManager) public payable ownerOnly {
+    function changeManager(address newManager) public ownerOnly {
         manager = newManager;
     }
 
-    function setTierPriceWei(TIER_TYPE tierType, uint64 newBasePriceWei) public payable managerOnly {
+    function setTierPriceWei(TIER_TYPE tierType, uint64 newBasePriceWei) public managerOnly {
         tiers[tierType].priceWei = newBasePriceWei;
     }
 
-    function setTierAdditionalDuration(TIER_TYPE tierType, uint32 additionalDuration) public payable managerOnly {
+    function setTierAdditionalDuration(TIER_TYPE tierType, uint32 additionalDuration) public managerOnly {
         tiers[tierType].additionalDuration = additionalDuration;
     }
 
-    function addDiscount(address userAddress, uint8 discountPercentage) public payable managerOnly {
+    function addDiscount(address userAddress, uint8 discountPercentage) public managerOnly {
         discounts[userAddress] = discountPercentage;
     }
 
@@ -84,7 +84,7 @@ contract Subscription {
         payable(owner).transfer(amount);
     }
 
-    function setSubscription(address _address, TIER_TYPE _tierType, uint32 _validity) public payable managerOnly {
+    function setSubscription(address _address, TIER_TYPE _tierType, uint32 _validity) public managerOnly {
         subscriptions[_address] = UserSubscription({
             tierType: _tierType,
             validity: _validity
