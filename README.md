@@ -35,10 +35,10 @@ To deploy the smart contracts to a sepolia, run:
   yarn deploy-sepolia
 ```
 
-### Latest automatically deployed version to Sepolia
+## Latest automatically deployed version to Sepolia
 
-Deployed Contract: 0x477897DC520337e5378C867A3E1F4fED99DcaF16
+Deployed Contract: 0xe96753f8B976b80f1E210add4F69874aB8Bc569b
 
 [Open generated ABI](https://raw.githubusercontent.com/lupakgabor/airdrop-copilot-contracts/main/contracts/SubscriptionABI.json)
 
-Commit hash: f0645c3509c700a8712cce6aac973e8dd182378f
+Commit hash: 8a00e0073aa6777f28bbbbfc6ae3c5f10ab3caa3
