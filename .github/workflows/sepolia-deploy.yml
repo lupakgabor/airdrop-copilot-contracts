@@ -32,10 +32,10 @@ jobs:
           echo "CONTRACT_ADDRESS=$(
             yarn deploy-sepolia | grep -o '0x[0-9a-zA-Z]*'
           )"  >> $GITHUB_OUTPUT
-      - name: Verify deployed contract
-        run: yarn verify-sepolia ${{ steps.deploy.outputs.CONTRACT_ADDRESS }} ${{ secrets.OWNER_ADDRESS }} ${{ secrets.MANAGER_ADDRESS }}
       - name: Print deployed contract address
         run: echo ${{ steps.deploy.outputs.CONTRACT_ADDRESS }}
+      - name: Verify deployed contract
+        run: yarn verify-sepolia ${{ steps.deploy.outputs.CONTRACT_ADDRESS }} ${{ secrets.OWNER_ADDRESS }} ${{ secrets.MANAGER_ADDRESS }}
       - name: Extract abi from hardhat artifact
         uses: sergeysova/jq-action@v2
         with:
