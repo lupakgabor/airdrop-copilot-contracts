@@ -5,7 +5,7 @@ import {expect} from "chai";
 const TIER_TYPE = {
     BASIC: 0,
     PRO: 1,
-    LIFETIME_BASIC: 2,
+    YEARLY_PRO: 2,
     LIFETIME_PRO: 3
 }
 
@@ -23,7 +23,7 @@ describe('Subscription.subscribe.test', () => {
     const testCases = [
         {tier: TIER_TYPE.BASIC, tierName: 'Basic', price: "0.05", extraDays: 30},
         {tier: TIER_TYPE.PRO, tierName: 'Pro', price: "0.25", extraDays: 30},
-        {tier: TIER_TYPE.LIFETIME_BASIC, tierName: 'Lifetime basic', price: "1.25", extraDays: 30 * 12 * 10},
+        {tier: TIER_TYPE.YEARLY_PRO, tierName: 'Yearly pro', price: "1.25", extraDays: 30 * 12},
         {tier: TIER_TYPE.LIFETIME_PRO, tierName: 'Lifetime pro', price: "4", extraDays: 30 * 12 * 10},
     ] as const;
 

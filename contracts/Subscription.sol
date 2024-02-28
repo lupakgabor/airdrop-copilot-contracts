@@ -5,7 +5,7 @@ contract Subscription {
     address public owner;
     address public manager;
 
-    enum TIER_TYPE {BASIC, PRO, LIFETIME_BASIC, LIFETIME_PRO} // Values: 0,1,2,3
+    enum TIER_TYPE {BASIC, PRO, YEARLY_PRO, LIFETIME_PREMIUM} // Values: 0,1,2,3
 
     struct TIER {
         uint64 priceWei;  // Max value: 18.44 Eth
@@ -27,8 +27,8 @@ contract Subscription {
 
         tiers[TIER_TYPE.BASIC] = TIER({priceWei: 0.05 ether, additionalDuration: 30 * 24 * 60 * 60}); // 30 days
         tiers[TIER_TYPE.PRO] = TIER({priceWei: 0.25 ether, additionalDuration: 30 * 24 * 60 * 60}); // 30 days
-        tiers[TIER_TYPE.LIFETIME_BASIC] = TIER({priceWei: 1.25 ether, additionalDuration: 10 * 12 * 30 * 24 * 60 * 60}); // 10 years
-        tiers[TIER_TYPE.LIFETIME_PRO] = TIER({priceWei: 4 ether, additionalDuration: 10 * 12 * 30 * 24 * 60 * 60}); // 10 years
+        tiers[TIER_TYPE.YEARLY_PRO] = TIER({priceWei: 1.25 ether, additionalDuration: 1 * 12 * 30 * 24 * 60 * 60}); // 1 years
+        tiers[TIER_TYPE.LIFETIME_PREMIUM] = TIER({priceWei: 4 ether, additionalDuration: 10 * 12 * 30 * 24 * 60 * 60}); // 10 years
     }
 
     function isSubscriptionActive(address userAddress) public view returns (bool) {

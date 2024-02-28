@@ -5,7 +5,7 @@ import {expect} from "chai";
 const TIER_TYPE = {
     BASIC: 0,
     PRO: 1,
-    LIFETIME_BASIC: 2,
+    YEARLY_PRO: 2,
     LIFETIME_PRO: 3
 }
 
@@ -32,8 +32,8 @@ describe('Subscription.test', () => {
             expect(await subscription.tiers(TIER_TYPE.PRO)).to.eql(
                 [ethers.parseEther("0.25"), BigInt(30 * 24 * 60 * 60)]
             );
-            expect(await subscription.tiers(TIER_TYPE.LIFETIME_BASIC)).to.eql(
-                [ethers.parseEther("1.25"), BigInt(10 * 12 * 30 * 24 * 60 * 60)]
+            expect(await subscription.tiers(TIER_TYPE.YEARLY_PRO)).to.eql(
+                [ethers.parseEther("1.25"), BigInt( 12 * 30 * 24 * 60 * 60)]
             );
             expect(await subscription.tiers(TIER_TYPE.LIFETIME_PRO)).to.eql(
                 [ethers.parseEther("4"), BigInt(10 * 12 * 30 * 24 * 60 * 60)]

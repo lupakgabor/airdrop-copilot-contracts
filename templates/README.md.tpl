@@ -34,7 +34,7 @@ To deploy the smart contracts to a sepolia, run:
   yarn deploy-sepolia
 ```
 
-## Latest automatically deployed version to Sepolia
+## Latest automatically deployed version on Sepolia
 
 Deployed Contract: {{CONTRACT_ADDRESS}}
 
