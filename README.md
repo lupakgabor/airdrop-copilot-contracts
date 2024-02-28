@@ -1,3 +1,4 @@
+[//]: # (GENERATED FILE DO NOT EDIT DIRECTLY)
 # Airdrop Copilot Contracts
 
 Welcome to the Airdrop Copilot Smart Contracts repository. This project contains the necessary smart contracts for the Airdrop Copilot project, designed to automate and make payments easier. Developed with Hardhat, this project provides a robust development environment for compiling, deploying, and testing Ethereum-based smart contracts.
@@ -34,3 +35,10 @@ To deploy the smart contracts to a sepolia, run:
   yarn deploy-sepolia
 ```
 
+### Latest automatically deployed version to Sepolia
+
+Deployed Contract: 0x477897DC520337e5378C867A3E1F4fED99DcaF16
+
+[Open generated ABI](https://raw.githubusercontent.com/lupakgabor/airdrop-copilot-contracts/main/contracts/SubscriptionABI.json)
+
+Commit hash: f0645c3509c700a8712cce6aac973e8dd182378f
